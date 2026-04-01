@@ -13,6 +13,7 @@ export enum RoundStatus {
   PENDING = 'PENDING',
   COLOR = 'COLOR',
   GRAPE = 'GRAPE',
+  YEAR = 'YEAR',
   MATCHING = 'MATCHING',
   SCORING = 'SCORING',
   DONE = 'DONE',

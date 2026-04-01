@@ -30,4 +30,7 @@ export class Bottle {
 
   @Column({ type: 'int', nullable: true })
   trueGlassPosition!: number | null; // 1, 2, or 3
+
+  @Column({ type: 'int', nullable: true })
+  trueYear!: number | null;
 }

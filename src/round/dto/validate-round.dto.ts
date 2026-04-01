@@ -24,6 +24,12 @@ export class BottleValidationDto {
   @Min(1, { message: 'Le numéro de verre doit être entre 1 et 3' })
   @Max(3, { message: 'Le numéro de verre doit être entre 1 et 3' })
   trueGlassPosition!: number;
+
+  @ApiProperty({ description: 'Année / millésime du vin', example: 2020 })
+  @IsInt({ message: 'L\'année doit être un entier' })
+  @Min(1900, { message: 'L\'année doit être supérieure à 1900' })
+  @Max(2100, { message: 'L\'année doit être inférieure à 2100' })
+  trueYear!: number;
 }
 
 export class ValidateRoundDto {

@@ -8,7 +8,7 @@ export class SubmitAnswerDto {
   bottleId!: string;
 
   @ApiProperty({ description: 'Phase de la manche', enum: RoundPhase })
-  @IsEnum(RoundPhase, { message: 'La phase doit être COLOR, GRAPE ou MATCHING' })
+  @IsEnum(RoundPhase, { message: 'La phase doit être COLOR, GRAPE, YEAR ou MATCHING' })
   roundPhase!: RoundPhase;
 
   @ApiProperty({ description: 'Valeur de la réponse', example: 'rouge' })

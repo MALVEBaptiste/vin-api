@@ -35,9 +35,9 @@ describe('RoundService', () => {
   };
 
   const mockBottles: Bottle[] = [
-    { id: 'bottle-1', roundId: 'round-1', position: 1, trueColor: null, trueGrape: null, trueName: null } as Bottle,
-    { id: 'bottle-2', roundId: 'round-1', position: 2, trueColor: null, trueGrape: null, trueName: null } as Bottle,
-    { id: 'bottle-3', roundId: 'round-1', position: 3, trueColor: null, trueGrape: null, trueName: null } as Bottle,
+    { id: 'bottle-1', roundId: 'round-1', position: 1, trueColor: null, trueGrape: null, trueGlassPosition: null, trueYear: null } as Bottle,
+    { id: 'bottle-2', roundId: 'round-1', position: 2, trueColor: null, trueGrape: null, trueGlassPosition: null, trueYear: null } as Bottle,
+    { id: 'bottle-3', roundId: 'round-1', position: 3, trueColor: null, trueGrape: null, trueGlassPosition: null, trueYear: null } as Bottle,
   ];
 
   const mockRound: Round = {
@@ -200,9 +200,9 @@ describe('RoundService', () => {
   describe('validateRound — scoring', () => {
     it('devrait calculer les scores correctement', async () => {
       const bottlesWithTruth = [
-        { ...mockBottles[0], trueColor: 'rouge', trueGrape: 'Merlot', trueName: 'Château X' },
-        { ...mockBottles[1], trueColor: 'blanc', trueGrape: 'Chardonnay', trueName: 'Château Y' },
-        { ...mockBottles[2], trueColor: 'rosé', trueGrape: 'Grenache', trueName: 'Château Z' },
+        { ...mockBottles[0], trueColor: 'rouge', trueGrape: 'Merlot', trueGlassPosition: 1, trueYear: 2020 },
+        { ...mockBottles[1], trueColor: 'blanc', trueGrape: 'Chardonnay', trueGlassPosition: 2, trueYear: 2021 },
+        { ...mockBottles[2], trueColor: 'rosé', trueGrape: 'Grenache', trueGlassPosition: 3, trueYear: 2022 },
       ];
 
       const roundWithBottles = { ...mockRound, bottles: bottlesWithTruth };
@@ -222,9 +222,9 @@ describe('RoundService', () => {
 
       const result = await service.validateRound('round-1', mockHostId, {
         bottles: [
-          { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueName: 'Château X' },
-          { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueName: 'Château Y' },
-          { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueName: 'Château Z' },
+          { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueGlassPosition: 1, trueYear: 2020 },
+          { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueGlassPosition: 2, trueYear: 2021 },
+          { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueGlassPosition: 3, trueYear: 2022 },
         ],
       });
 
@@ -235,15 +235,15 @@ describe('RoundService', () => {
 
     it('devrait appliquer le bonus +3 pour une manche parfaite', async () => {
       const bottlesWithTruth = [
-        { ...mockBottles[0], trueColor: 'rouge', trueGrape: 'Merlot', trueName: 'Château X' },
-        { ...mockBottles[1], trueColor: 'blanc', trueGrape: 'Chardonnay', trueName: 'Château Y' },
-        { ...mockBottles[2], trueColor: 'rosé', trueGrape: 'Grenache', trueName: 'Château Z' },
+        { ...mockBottles[0], trueColor: 'rouge', trueGrape: 'Merlot', trueGlassPosition: 1, trueYear: 2020 },
+        { ...mockBottles[1], trueColor: 'blanc', trueGrape: 'Chardonnay', trueGlassPosition: 2, trueYear: 2021 },
+        { ...mockBottles[2], trueColor: 'rosé', trueGrape: 'Grenache', trueGlassPosition: 3, trueYear: 2022 },
       ];
 
       const roundWithBottles = { ...mockRound, bottles: bottlesWithTruth };
       roundRepo.findOne.mockResolvedValue(roundWithBottles);
 
-      // Perfect round: 9 correct answers (3 bottles × 3 phases)
+      // Perfect round: 12 correct answers (3 bottles × 4 phases)
       const perfectAnswers: Partial<Answer>[] = [
         // COLOR phase
         { id: 'a1', playerId: mockPlayer1Id, bottleId: 'bottle-1', roundPhase: RoundPhase.COLOR, value: 'rouge', isCorrect: null, points: 0 },
@@ -253,10 +253,14 @@ describe('RoundService', () => {
         { id: 'a4', playerId: mockPlayer1Id, bottleId: 'bottle-1', roundPhase: RoundPhase.GRAPE, value: 'Merlot', isCorrect: null, points: 0 },
         { id: 'a5', playerId: mockPlayer1Id, bottleId: 'bottle-2', roundPhase: RoundPhase.GRAPE, value: 'Chardonnay', isCorrect: null, points: 0 },
         { id: 'a6', playerId: mockPlayer1Id, bottleId: 'bottle-3', roundPhase: RoundPhase.GRAPE, value: 'Grenache', isCorrect: null, points: 0 },
+        // YEAR phase
+        { id: 'a7', playerId: mockPlayer1Id, bottleId: 'bottle-1', roundPhase: RoundPhase.YEAR, value: '2020', isCorrect: null, points: 0 },
+        { id: 'a8', playerId: mockPlayer1Id, bottleId: 'bottle-2', roundPhase: RoundPhase.YEAR, value: '2021', isCorrect: null, points: 0 },
+        { id: 'a9', playerId: mockPlayer1Id, bottleId: 'bottle-3', roundPhase: RoundPhase.YEAR, value: '2022', isCorrect: null, points: 0 },
         // MATCHING phase
-        { id: 'a7', playerId: mockPlayer1Id, bottleId: 'bottle-1', roundPhase: RoundPhase.MATCHING, value: '1', isCorrect: null, points: 0 },
-        { id: 'a8', playerId: mockPlayer1Id, bottleId: 'bottle-2', roundPhase: RoundPhase.MATCHING, value: '2', isCorrect: null, points: 0 },
-        { id: 'a9', playerId: mockPlayer1Id, bottleId: 'bottle-3', roundPhase: RoundPhase.MATCHING, value: '3', isCorrect: null, points: 0 },
+        { id: 'a10', playerId: mockPlayer1Id, bottleId: 'bottle-1', roundPhase: RoundPhase.MATCHING, value: '1', isCorrect: null, points: 0 },
+        { id: 'a11', playerId: mockPlayer1Id, bottleId: 'bottle-2', roundPhase: RoundPhase.MATCHING, value: '2', isCorrect: null, points: 0 },
+        { id: 'a12', playerId: mockPlayer1Id, bottleId: 'bottle-3', roundPhase: RoundPhase.MATCHING, value: '3', isCorrect: null, points: 0 },
       ];
 
       (mockQueryRunner.manager as any).createQueryBuilder = jest.fn().mockReturnValue({
@@ -266,13 +270,14 @@ describe('RoundService', () => {
 
       const result = await service.validateRound('round-1', mockHostId, {
         bottles: [
-          { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueName: 'Château X' },
-          { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueName: 'Château Y' },
-          { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueName: 'Château Z' },
+          { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueGlassPosition: 1, trueYear: 2020 },
+          { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueGlassPosition: 2, trueYear: 2021 },
+          { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueGlassPosition: 3, trueYear: 2022 },
         ],
       });
 
-      expect(result.scores[mockPlayer1Id].points).toBe(12); // 9 + 3 bonus
+      // 3 color (1pt each) + 3 grape (1pt each) + 3 year (2pt each) + 3 matching (1pt each) = 15 + 3 bonus = 18
+      expect(result.scores[mockPlayer1Id].points).toBe(18);
       expect(result.scores[mockPlayer1Id].bonus).toBe(true);
     });
 
@@ -282,9 +287,9 @@ describe('RoundService', () => {
       await expect(
         service.validateRound('round-1', mockPlayer1Id, {
           bottles: [
-            { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueName: 'Château X' },
-            { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueName: 'Château Y' },
-            { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueName: 'Château Z' },
+            { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueGlassPosition: 1, trueYear: 2020 },
+            { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueGlassPosition: 2, trueYear: 2021 },
+            { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueGlassPosition: 3, trueYear: 2022 },
           ],
         }),
       ).rejects.toThrow(ForbiddenException);
@@ -296,7 +301,7 @@ describe('RoundService', () => {
       await expect(
         service.validateRound('round-1', mockHostId, {
           bottles: [
-            { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueName: 'Château X' },
+            { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueGlassPosition: 1, trueYear: 2020 },
           ],
         }),
       ).rejects.toThrow(BadRequestException);
@@ -310,9 +315,9 @@ describe('RoundService', () => {
       await expect(
         service.validateRound('round-1', mockHostId, {
           bottles: [
-            { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueName: 'Château X' },
-            { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueName: 'Château Y' },
-            { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueName: 'Château Z' },
+            { position: 1, trueColor: 'rouge', trueGrape: 'Merlot', trueGlassPosition: 1, trueYear: 2020 },
+            { position: 2, trueColor: 'blanc', trueGrape: 'Chardonnay', trueGlassPosition: 2, trueYear: 2021 },
+            { position: 3, trueColor: 'rosé', trueGrape: 'Grenache', trueGlassPosition: 3, trueYear: 2022 },
           ],
         }),
       ).rejects.toThrow();
@@ -330,8 +335,15 @@ describe('RoundService', () => {
       expect(result.status).toBe(RoundStatus.GRAPE);
     });
 
-    it('devrait passer de GRAPE à MATCHING', async () => {
+    it('devrait passer de GRAPE à YEAR', async () => {
       roundRepo.findOne.mockResolvedValue({ ...mockRound, status: RoundStatus.GRAPE });
+
+      const result = await service.advancePhase('round-1', mockHostId);
+      expect(result.status).toBe(RoundStatus.YEAR);
+    });
+
+    it('devrait passer de YEAR à MATCHING', async () => {
+      roundRepo.findOne.mockResolvedValue({ ...mockRound, status: RoundStatus.YEAR });
 
       const result = await service.advancePhase('round-1', mockHostId);
       expect(result.status).toBe(RoundStatus.MATCHING);

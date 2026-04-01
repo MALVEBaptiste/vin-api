@@ -11,6 +11,7 @@ import { Bottle } from './bottle.entity';
 export enum RoundPhase {
   COLOR = 'COLOR',
   GRAPE = 'GRAPE',
+  YEAR = 'YEAR',
   MATCHING = 'MATCHING',
 }
 
@@ -42,6 +43,6 @@ export class Answer {
   @Column({ type: 'boolean', nullable: true })
   isCorrect!: boolean | null;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'float', default: 0 })
   points!: number;
 }

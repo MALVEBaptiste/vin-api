@@ -1,9 +1,9 @@
 import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-  Logger,
+    Injectable,
+    NotFoundException,
+    BadRequestException,
+    ForbiddenException,
+    Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -156,18 +156,19 @@ export class RoundService {
       const answersPerPlayer = await this.answerRepo
         .createQueryBuilder('answer')
         .select('answer.playerId', 'playerId')
-        .where('answer.bottleId IN (SELECT id FROM bottle WHERE roundId = :roundId)', { roundId })
+        .where('answer.bottleId IN (SELECT id FROM bottles WHERE "roundId" = :roundId)', { roundId })
         .andWhere('answer.roundPhase = :phase', { phase: round.status })
         .groupBy('answer.playerId')
         .getRawMany();
 
       const respondedPlayerIds = new Set(answersPerPlayer.map((r) => r.playerId));
-      const missingPlayers = playerIds.filter((id) => !respondedPlayerIds.has(id));
+      const missingPlayers = game.players.filter((p) => !respondedPlayerIds.has(p.id));
 
       if (missingPlayers.length > 0) {
+        const names = missingPlayers.map((p) => p.username).join(', ');
         this.logger.warn(`Cannot advance phase: missing responses from ${missingPlayers.length} players`);
         throw new BadRequestException(
-          `Les joueurs suivants n'ont pas répondu : ${missingPlayers.join(', ')}`,
+          `Les joueurs suivants n'ont pas répondu : ${names}`,
         );
       }
     }
@@ -219,6 +220,7 @@ export class RoundService {
         bottle.trueColor = bottleDto.trueColor;
         bottle.trueGrape = bottleDto.trueGrape;
         bottle.trueGlassPosition = bottleDto.trueGlassPosition;
+        bottle.trueYear = bottleDto.trueYear;
         await queryRunner.manager.save(bottle);
       }
 
@@ -244,48 +246,75 @@ export class RoundService {
         if (!bottle) continue;
 
         let isCorrect = false;
+        let pointsEarned = 0;
 
         switch (answer.roundPhase) {
           case RoundPhase.COLOR:
             isCorrect = answer.value.toLowerCase() === bottle.trueColor?.toLowerCase();
+            pointsEarned = isCorrect ? 1 : 0;
             break;
-          case RoundPhase.GRAPE:
-            // Normalize grapes: split by comma, trim, sort, and compare case-insensitively
-            const normalize = (str: string | null | undefined) => {
-              if (!str) return '';
-              return str
-                .split(',')
-                .map((s) => s.trim().toLowerCase())
-                .sort()
-                .join(',');
+          case RoundPhase.GRAPE: {
+            // Grape scoring: 1 pt per correct grape, penalized if too many submitted
+            // Penalty multiplier: min(1, trueCount / submittedCount)
+            const normalizeGrapes = (str: string | null | undefined): string[] => {
+              if (!str) return [];
+              return str.split(',').map((s) => s.trim().toLowerCase()).filter((s) => s.length > 0).sort();
             };
-            isCorrect = normalize(answer.value) === normalize(bottle.trueGrape);
+            const playerGrapes = normalizeGrapes(answer.value);
+            const trueGrapes = normalizeGrapes(bottle.trueGrape);
+            const correctCount = playerGrapes.filter((g) => trueGrapes.includes(g)).length;
+            isCorrect = playerGrapes.length === trueGrapes.length && correctCount === trueGrapes.length;
+            const multiplier = playerGrapes.length > 0
+              ? Math.min(1, trueGrapes.length / playerGrapes.length)
+              : 0;
+            pointsEarned = Math.round(correctCount * multiplier * 100) / 100;
             break;
+          }
+          case RoundPhase.YEAR: {
+            // 2 points exact, 1 point if off by 1 year, 0 otherwise
+            const playerYear = parseInt(String(answer.value), 10);
+            const trueYear = bottle.trueYear;
+            if (trueYear !== null && !isNaN(playerYear)) {
+              const diff = Math.abs(playerYear - trueYear);
+              if (diff === 0) {
+                isCorrect = true;
+                pointsEarned = 2;
+              } else if (diff === 1) {
+                isCorrect = false;
+                pointsEarned = 1;
+              } else {
+                isCorrect = false;
+                pointsEarned = 0;
+              }
+            }
+            break;
+          }
           case RoundPhase.MATCHING:
             // For matching, value is the glass position the player assigned to this bottle
             // Compare with the true glass position
             isCorrect = String(answer.value) === String(bottle.trueGlassPosition);
+            pointsEarned = isCorrect ? 1 : 0;
             break;
         }
 
         answer.isCorrect = isCorrect;
-        answer.points = isCorrect ? 1 : 0;
+        answer.points = pointsEarned;
         await queryRunner.manager.save(answer);
 
         if (!playerScores[answer.playerId]) {
           playerScores[answer.playerId] = { points: 0, totalCorrect: 0, totalAnswers: 0 };
         }
         playerScores[answer.playerId].totalAnswers++;
+        playerScores[answer.playerId].points += pointsEarned;
         if (isCorrect) {
-          playerScores[answer.playerId].points += 1;
           playerScores[answer.playerId].totalCorrect++;
         }
       }
 
-      // Apply bonus: +3 if ALL answers correct (9 total: 3 bottles × 3 phases)
+      // Apply bonus: +3 if ALL answers correct (12 total: 3 bottles × 4 phases)
       const result: Record<string, { points: number; bonus: boolean }> = {};
       for (const [playerId, score] of Object.entries(playerScores)) {
-        const perfectRound = score.totalCorrect === score.totalAnswers && score.totalAnswers === 9;
+        const perfectRound = score.totalCorrect === score.totalAnswers && score.totalAnswers === 12;
         const bonus = perfectRound ? 3 : 0;
 
         if (perfectRound) {
@@ -345,7 +374,7 @@ export class RoundService {
     return results.map((r) => ({
       playerId: r.playerId,
       username: r.username,
-      points: parseInt(r.points, 10) || 0,
+      points: parseFloat(r.points) || 0,
     }));
   }
 
@@ -384,7 +413,7 @@ export class RoundService {
     return results.map((r) => ({
       playerId: r.playerId,
       username: r.username,
-      totalPoints: parseInt(r.totalPoints, 10) || 0,
+      totalPoints: parseFloat(r.totalPoints) || 0,
     }));
   }
 
@@ -420,6 +449,9 @@ export class RoundService {
               break;
             case RoundPhase.GRAPE:
               trueValue = bottle.trueGrape || '?';
+              break;
+            case RoundPhase.YEAR:
+              trueValue = bottle.trueYear ? String(bottle.trueYear) : '?';
               break;
             case RoundPhase.MATCHING:
               trueValue = String(bottle.trueGlassPosition) || '?';
@@ -480,6 +512,7 @@ export class RoundService {
     const phaseMap: Record<string, RoundStatus> = {
       [RoundPhase.COLOR]: RoundStatus.COLOR,
       [RoundPhase.GRAPE]: RoundStatus.GRAPE,
+      [RoundPhase.YEAR]: RoundStatus.YEAR,
       [RoundPhase.MATCHING]: RoundStatus.MATCHING,
     };
 
@@ -494,6 +527,7 @@ export class RoundService {
     const order: RoundStatus[] = [
       RoundStatus.COLOR,
       RoundStatus.GRAPE,
+      RoundStatus.YEAR,
       RoundStatus.MATCHING,
       RoundStatus.SCORING,
     ];
