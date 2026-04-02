@@ -1,7 +1,7 @@
 import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
 } from 'typeorm';
 
 @Entity('grapes')
@@ -12,6 +12,15 @@ export class Grape {
   @Column({ unique: true })
   name!: string;
 
+  @Column()
+  color!: 'rouge' | 'blanc';
+
+  @Column('simple-array', { nullable: true })
+  synonyms?: string[];
+
   @Column('simple-array')
-  colors!: string[];
+  regions!: string[];
+
+  @Column('simple-array')
+  aromas!: string[];
 }

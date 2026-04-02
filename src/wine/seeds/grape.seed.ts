@@ -4,43 +4,233 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const GRAPES_DATA: { name: string; colors: string[] }[] = [
-  // Rouge
-  { name: 'Cabernet-Sauvignon', colors: ['rouge'] },
-  { name: 'Merlot', colors: ['rouge'] },
-  { name: 'Pinot Noir', colors: ['rouge'] },
-  { name: 'Syrah', colors: ['rouge', 'rosé'] },
-  { name: 'Grenache', colors: ['rouge', 'rosé'] },
-  { name: 'Mourvèdre', colors: ['rouge', 'rosé'] },
-  { name: 'Carignan', colors: ['rouge', 'rosé'] },
-  { name: 'Cinsault', colors: ['rouge', 'rosé'] },
-  { name: 'Gamay', colors: ['rouge'] },
-  { name: 'Cabernet Franc', colors: ['rouge'] },
-  { name: 'Malbec', colors: ['rouge'] },
-  { name: 'Tannat', colors: ['rouge'] },
-  { name: 'Négrette', colors: ['rouge'] },
-  { name: 'Fer Servadou', colors: ['rouge'] },
 
-  // Blanc
-  { name: 'Chardonnay', colors: ['blanc'] },
-  { name: 'Sauvignon Blanc', colors: ['blanc'] },
-  { name: 'Chenin Blanc', colors: ['blanc', 'orange'] },
-  { name: 'Riesling', colors: ['blanc'] },
-  { name: 'Gewurztraminer', colors: ['blanc', 'orange'] },
-  { name: 'Pinot Gris', colors: ['blanc', 'orange'] },
-  { name: 'Viognier', colors: ['blanc'] },
-  { name: 'Roussanne', colors: ['blanc'] },
-  { name: 'Marsanne', colors: ['blanc'] },
-  { name: 'Grenache Blanc', colors: ['blanc', 'orange'] },
-  { name: 'Clairette', colors: ['blanc'] },
-  { name: 'Picpoul', colors: ['blanc'] },
-  { name: 'Muscadet', colors: ['blanc'] },
-  { name: 'Aligoté', colors: ['blanc'] },
-  { name: 'Pinot Blanc', colors: ['blanc'] },
-  { name: 'Sylvaner', colors: ['blanc'] },
+const GRAPES_DATA: Omit<Grape, 'id'>[] = [
+  // 🔴 Rouges
+  {
+    name: 'Cabernet Sauvignon',
+    color: 'rouge',
+    regions: ['Bordeaux', 'Languedoc'],
+    aromas: ['cassis', 'poivron', 'cèdre', 'épices'],
+  },
+  {
+    name: 'Cabernet Franc',
+    color: 'rouge',
+    regions: ['Loire', 'Bordeaux'],
+    aromas: ['framboise', 'poivron', 'herbes'],
+  },
+  {
+    name: 'Merlot',
+    color: 'rouge',
+    regions: ['Bordeaux', 'Sud-Ouest'],
+    aromas: ['prune', 'cerise', 'chocolat'],
+  },
+  {
+    name: 'Malbec',
+    synonyms: ['Côt'],
+    color: 'rouge',
+    regions: ['Sud-Ouest', 'Bordeaux'],
+    aromas: ['mûre', 'violette', 'épices'],
+  },
+  {
+    name: 'Petit Verdot',
+    color: 'rouge',
+    regions: ['Bordeaux'],
+    aromas: ['violette', 'réglisse', 'épices'],
+  },
+  {
+    name: 'Pinot Noir',
+    color: 'rouge',
+    regions: ['Bourgogne', 'Alsace'],
+    aromas: ['cerise', 'fraise', 'sous-bois'],
+  },
+  {
+    name: 'Gamay',
+    color: 'rouge',
+    regions: ['Beaujolais', 'Loire'],
+    aromas: ['fruits rouges', 'banane', 'bonbon'],
+  },
+  {
+    name: 'Syrah',
+    color: 'rouge',
+    regions: ['Rhône', 'Languedoc'],
+    aromas: ['poivre', 'mûre', 'olive'],
+  },
+  {
+    name: 'Grenache',
+    color: 'rouge',
+    regions: ['Rhône', 'Languedoc', 'Provence'],
+    aromas: ['fraise', 'épices', 'garrigue'],
+  },
+  {
+    name: 'Mourvèdre',
+    color: 'rouge',
+    regions: ['Provence', 'Rhône'],
+    aromas: ['cuir', 'épices', 'fruits noirs'],
+  },
+  {
+    name: 'Carignan',
+    color: 'rouge',
+    regions: ['Languedoc'],
+    aromas: ['fruits noirs', 'épices'],
+  },
+  {
+    name: 'Cinsault',
+    color: 'rouge',
+    regions: ['Provence', 'Languedoc'],
+    aromas: ['fraise', 'floral'],
+  },
+  {
+    name: 'Tannat',
+    color: 'rouge',
+    regions: ['Sud-Ouest'],
+    aromas: ['cassis', 'réglisse', 'tanins puissants'],
+  },
+  {
+    name: 'Négrette',
+    color: 'rouge',
+    regions: ['Sud-Ouest'],
+    aromas: ['violette', 'poivre'],
+  },
+  {
+    name: 'Fer Servadou',
+    synonyms: ['Braucol'],
+    color: 'rouge',
+    regions: ['Sud-Ouest'],
+    aromas: ['fruits rouges', 'épices'],
+  },
+  {
+    name: 'Mondeuse',
+    color: 'rouge',
+    regions: ['Savoie'],
+    aromas: ['poivre', 'fruits noirs'],
+  },
+  {
+    name: 'Sciaccarellu',
+    color: 'rouge',
+    regions: ['Corse'],
+    aromas: ['épices', 'fruits rouges'],
+  },
+  {
+    name: 'Niellucciu',
+    color: 'rouge',
+    regions: ['Corse'],
+    aromas: ['cerise', 'herbes'],
+  },
 
-  // Jaune
-  { name: 'Savagnin', colors: ['jaune'] },
+  // ⚪ Blancs
+  {
+    name: 'Chardonnay',
+    color: 'blanc',
+    regions: ['Bourgogne', 'Champagne'],
+    aromas: ['beurre', 'pomme', 'vanille'],
+  },
+  {
+    name: 'Sauvignon Blanc',
+    color: 'blanc',
+    regions: ['Loire', 'Bordeaux'],
+    aromas: ['agrumes', 'buis', 'fruit exotique'],
+  },
+  {
+    name: 'Chenin Blanc',
+    color: 'blanc',
+    regions: ['Loire'],
+    aromas: ['pomme', 'coing', 'miel'],
+  },
+  {
+    name: 'Melon de Bourgogne',
+    synonyms: ['Muscadet'],
+    color: 'blanc',
+    regions: ['Loire'],
+    aromas: ['citron', 'iode', 'minéral'],
+  },
+  {
+    name: 'Riesling',
+    color: 'blanc',
+    regions: ['Alsace'],
+    aromas: ['citron', 'pétrole', 'minéral'],
+  },
+  {
+    name: 'Gewurztraminer',
+    color: 'blanc',
+    regions: ['Alsace'],
+    aromas: ['litchi', 'rose', 'épices'],
+  },
+  {
+    name: 'Pinot Gris',
+    color: 'blanc',
+    regions: ['Alsace'],
+    aromas: ['poire', 'fumé', 'miel'],
+  },
+  {
+    name: 'Viognier',
+    color: 'blanc',
+    regions: ['Rhône'],
+    aromas: ['abricot', 'fleurs', 'pêche'],
+  },
+  {
+    name: 'Marsanne',
+    color: 'blanc',
+    regions: ['Rhône'],
+    aromas: ['amande', 'poire'],
+  },
+  {
+    name: 'Roussanne',
+    color: 'blanc',
+    regions: ['Rhône'],
+    aromas: ['miel', 'herbes'],
+  },
+  {
+    name: 'Ugni Blanc',
+    color: 'blanc',
+    regions: ['Sud-Ouest', 'Cognac'],
+    aromas: ['neutre', 'acidité'],
+  },
+  {
+    name: 'Colombard',
+    color: 'blanc',
+    regions: ['Sud-Ouest'],
+    aromas: ['agrumes', 'fruit exotique'],
+  },
+  {
+    name: 'Gros Manseng',
+    color: 'blanc',
+    regions: ['Sud-Ouest'],
+    aromas: ['ananas', 'épices'],
+  },
+  {
+    name: 'Petit Manseng',
+    color: 'blanc',
+    regions: ['Sud-Ouest'],
+    aromas: ['miel', 'fruits confits'],
+  },
+  {
+    name: 'Vermentino',
+    synonyms: ['Rolle'],
+    color: 'blanc',
+    regions: ['Corse', 'Provence'],
+    aromas: ['agrumes', 'herbes', 'amande'],
+  },
+  {
+    name: 'Clairette',
+    color: 'blanc',
+    regions: ['Rhône', 'Languedoc'],
+    aromas: ['pomme', 'fenouil'],
+  },
+  {
+    name: 'Picpoul',
+    color: 'blanc',
+    regions: ['Languedoc'],
+    aromas: ['citron', 'minéral'],
+  },
+
+  // 🟡 Spécifique
+  {
+    name: 'Savagnin',
+    color: 'blanc',
+    regions: ['Jura'],
+    aromas: ['noix', 'curry', 'pomme'],
+  },
 ];
 
 async function seed() {
@@ -59,7 +249,10 @@ async function seed() {
     if (!exists) {
       await repo.save(repo.create(grape));
     } else {
-      exists.colors = grape.colors;
+      exists.color = grape.color;
+      exists.synonyms = grape.synonyms;
+      exists.regions = grape.regions;
+      exists.aromas = grape.aromas;
       await repo.save(exists);
     }
   }

@@ -19,7 +19,7 @@ export class WineService {
 
   async getGrapesByColor(color: string): Promise<Grape[]> {
     const grapes = await this.grapeRepo.find();
-    return grapes.filter((g) => g.colors.includes(color));
+    return grapes.filter((g) => g.color === color);
   }
 
   async getAllGrapes(): Promise<Grape[]> {

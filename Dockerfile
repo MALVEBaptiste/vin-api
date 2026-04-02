@@ -25,23 +25,39 @@ WORKDIR /app
 # Définir l'environnement
 ENV NODE_ENV=production
 
-# Installer les dépendances de production uniquement
+# Installer netcat pour le health check du démarrage
+RUN apk add --no-cache netcat-openbsd
+
+# Copier les fichiers source nécessaires au seed (ts-node en a besoin)
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+
+# Copier les dépendances (toutes, pour exécuter les seeds et migrations)
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci
 
 # Copier l'application compilée depuis le builder
 COPY --from=builder /app/dist ./dist
 
+# Copier le code source pour ts-node (seeds et migrations)
+COPY src ./src
+
 # Créer un utilisateur non-root pour la sécurité
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
+
+# Copier le script d'entrypoint
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 USER nodejs
 
 # Exposer le port
 EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
-# Lancer l'application
-CMD ["node", "dist/main"]
+# Lancer l'application avec le script d'entrypoint
+CMD ["sh", "/app/docker-entrypoint.sh"]
