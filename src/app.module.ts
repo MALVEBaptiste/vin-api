@@ -18,7 +18,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
         type: 'postgres' as const,
         url: config.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
+        synchronize: true,
         logging: false,
       }),
     }),
